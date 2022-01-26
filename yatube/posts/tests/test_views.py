@@ -32,6 +32,7 @@ class PostPagesTests(TestCase):
             content_type='image/gif'
         )
         cls.user = User.objects.create_user(username='auth')
+        cls.user2 = User.objects.create_user(username='author')
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test-slug',
@@ -194,39 +195,36 @@ class PostPagesTests(TestCase):
         self.assertNotEqual(past_response.content, response.content)
 
     def test_follow(self):
-        user2 = User.objects.create_user(username='author')
         self.authorized_client.post(
-            reverse('posts:profile_follow', kwargs={'username': user2})
+            reverse('posts:profile_follow', kwargs={'username': self.user2})
         )
         self.assertTrue(
-            Follow.objects.filter(user=self.user, author=user2).exists()
+            Follow.objects.filter(user=self.user, author=self.user2).exists()
         )
 
     def test_unfollow(self):
-        user2 = User.objects.create_user(username='author')
 
         # сначала подписываем пользователя на author
 
         self.authorized_client.post(
-            reverse('posts:profile_follow', kwargs={'username': user2})
+            reverse('posts:profile_follow', kwargs={'username': self.user2})
         )
 
         # затем отписываем
 
         self.authorized_client.post(
-            reverse('posts:profile_unfollow', kwargs={'username': user2})
+            reverse('posts:profile_unfollow', kwargs={'username': self.user2})
         )
         self.assertFalse(
-            Follow.objects.filter(user=self.user, author=user2).exists()
+            Follow.objects.filter(user=self.user, author=self.user2).exists()
         )
 
     def test_follow_feed(self):
         """Пост появояется в ленте подписчика"""
-        user2 = User.objects.create_user(username='author')
         self.authorized_client.post(
-            reverse('posts:profile_follow', kwargs={'username': user2})
+            reverse('posts:profile_follow', kwargs={'username': self.user2})
         )
-        post = Post.objects.create(author=user2)
+        post = Post.objects.create(author=self.user2)
         response = self.authorized_client.post(
             reverse('posts:follow_index')
         )
@@ -234,19 +232,19 @@ class PostPagesTests(TestCase):
 
     def test_unfollow_feed(self):
         """Пост не появояется в ленте неподписчика"""
-        user2 = User.objects.create_user(username='author')
+
         # сначала подписываем пользователя на author
 
         self.authorized_client.post(
-            reverse('posts:profile_follow', kwargs={'username': user2})
+            reverse('posts:profile_follow', kwargs={'username': self.user2})
         )
 
         # затем отписываем
 
         self.authorized_client.post(
-            reverse('posts:profile_unfollow', kwargs={'username': user2})
+            reverse('posts:profile_unfollow', kwargs={'username': self.user2})
         )
-        post = Post.objects.create(author=user2)
+        post = Post.objects.create(author=self.user2)
         response = self.authorized_client.post(
             reverse('posts:follow_index')
         )
