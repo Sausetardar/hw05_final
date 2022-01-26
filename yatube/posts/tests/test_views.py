@@ -4,7 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from ..models import Group, Post, Comment, Follow
 from django import forms
-from time import sleep
+from django.core.cache import cache
 import shutil
 import tempfile
 from django.conf import settings
@@ -190,7 +190,7 @@ class PostPagesTests(TestCase):
         future_response = self.client.get(reverse('posts:index'))
         self.assertEqual(past_response.content, future_response.content)
 
-        sleep(20)
+        cache.clear()
         response = self.client.get(reverse('posts:index'))
         self.assertNotEqual(past_response.content, response.content)
 
